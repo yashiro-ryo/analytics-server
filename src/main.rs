@@ -1,4 +1,10 @@
-use axum::{routing::get, Router};
+use axum::{
+    http::StatusCode,
+    response::IntoResponse,
+    routing::{get, post},
+    Json, Router,
+};
+use serde::Deserialize;
 use std::env;
 use std::net::SocketAddr;
 
@@ -9,7 +15,8 @@ async fn main() {
     env::set_var("RUST_LOG", log_level);
     tracing_subscriber::fmt::init();
 
-    let app = Router::new().route("/", get(root));
+    let app = create_app();
+        
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     tracing::debug!("listening on {}", addr);
 
@@ -19,6 +26,24 @@ async fn main() {
         .unwrap();
 }
 
+fn create_app() -> Router {
+    Router::new()
+        .route("/", get(root))
+        .route("/api/v1/register", post(register_event))
+}
+
 async fn root() -> &'static str {
     "Hello World!!\n"
+}
+
+async fn register_event(Json(payload): Json<Event>) -> impl IntoResponse {
+    println!(
+        "event_name: {}, event_detail: {}",
+        payload.event_name, payload.event_detail
+    );
+    let event = Event {
+        event_name: payload.event_name,
+        event_detail: payload.event_detail,
+    };
+    (StatusCode::CREATED, Json(event));
 }
