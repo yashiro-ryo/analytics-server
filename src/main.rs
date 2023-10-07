@@ -47,3 +47,9 @@ async fn register_event(Json(payload): Json<Event>) -> impl IntoResponse {
     };
     (StatusCode::CREATED, Json(event));
 }
+
+#[derive(Deserialize)]
+struct Event {
+    event_name: String,
+    event_detail: String,
+}
