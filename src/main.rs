@@ -29,6 +29,7 @@ fn create_app() -> Router {
     Router::new()
         .route("/", get(root))
         .route("/api/v1/register", post(register_event))
+        .route("/api/v1/events", get(get_events))
 }
 
 async fn root() -> &'static str {
@@ -45,6 +46,24 @@ async fn register_event(Json(payload): Json<Event>) -> impl IntoResponse {
         event_detail: payload.event_detail,
     };
     (StatusCode::CREATED, Json(event))
+}
+
+async fn get_events() -> impl IntoResponse {
+    let events: [Event; 3] = [
+        Event {
+            event_name: "onclick".to_string(),
+            event_detail: "run-button".to_string(),
+        },
+        Event {
+            event_name: "onclick".to_string(),
+            event_detail: "hint-button".to_string(),
+        },
+        Event {
+            event_name: "onclick".to_string(),
+            event_detail: "testcase-button".to_string(),
+        },
+    ];
+    (StatusCode::OK, Json(events))
 }
 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
@@ -89,5 +108,38 @@ mod test {
                 event_detail: "run-button".to_string(),
             }
         );
+    }
+
+    // GET /api/v1/events のテスト
+    #[tokio::test]
+    async fn should_return_events() {
+        let req = Request::builder()
+            .uri("/api/v1/events")
+            .method(Method::GET)
+            .body(Body::empty())
+            .unwrap();
+
+        let res = create_app().oneshot(req).await.unwrap();
+
+        let bytes = hyper::body::to_bytes(res.into_body()).await.unwrap();
+        let body: String = String::from_utf8(bytes.to_vec()).unwrap();
+        let events: [Event; 3] = serde_json::from_str(&body).expect("cannot convert Event instance.");
+
+        let correct_events: [Event; 3] = [
+            Event {
+                event_name: "onclick".to_string(),
+                event_detail: "run-button".to_string(),
+            },
+            Event {
+                event_name: "onclick".to_string(),
+                event_detail: "hint-button".to_string(),
+            },
+            Event {
+                event_name: "onclick".to_string(),
+                event_detail: "testcase-button".to_string(),
+            },
+        ];
+
+        assert_eq!(events, correct_events);
     }
 }
