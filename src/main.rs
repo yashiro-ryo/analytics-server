@@ -4,7 +4,9 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use dotenv::dotenv;
 use serde::{Deserialize, Serialize};
+use sqlx::PgPool;
 use std::env;
 use std::net::SocketAddr;
 
@@ -14,6 +16,13 @@ async fn main() {
     let log_level = env::var("RUST_LOG").unwrap_or("info".to_string());
     env::set_var("RUST_LOG", log_level);
     tracing_subscriber::fmt::init();
+    dotenv().ok();
+
+    let database_url = &env::var("DATABASE_URL").expect("undefined [DATABASE_URL]");
+    tracing::debug!("start connect database...");
+    let _pool = PgPool::connect(database_url)
+        .await
+        .expect(&format!("fail connect database, url is [{}]", database_url));
 
     let app = create_app();
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -123,7 +132,8 @@ mod test {
 
         let bytes = hyper::body::to_bytes(res.into_body()).await.unwrap();
         let body: String = String::from_utf8(bytes.to_vec()).unwrap();
-        let events: [Event; 3] = serde_json::from_str(&body).expect("cannot convert Event instance.");
+        let events: [Event; 3] =
+            serde_json::from_str(&body).expect("cannot convert Event instance.");
 
         let correct_events: [Event; 3] = [
             Event {
