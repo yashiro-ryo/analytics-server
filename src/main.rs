@@ -25,7 +25,7 @@ async fn main() {
         .expect(&format!("fail connect database, url is [{}]", database_url));
 
     let app = create_app();
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3030));
     tracing::debug!("listening on {}", addr);
 
     axum::Server::bind(&addr)
