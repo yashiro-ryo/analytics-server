@@ -51,6 +51,7 @@ async fn register_event(Json(payload): Json<Event>) -> impl IntoResponse {
         payload.event_name, payload.event_detail
     );
     let event = Event {
+        uid: payload.uid,
         event_name: payload.event_name,
         event_detail: payload.event_detail,
     };
@@ -60,14 +61,17 @@ async fn register_event(Json(payload): Json<Event>) -> impl IntoResponse {
 async fn get_events() -> impl IntoResponse {
     let events: [Event; 3] = [
         Event {
+            uid: "1".to_string(),
             event_name: "onclick".to_string(),
             event_detail: "run-button".to_string(),
         },
         Event {
+            uid: "2".to_string(),
             event_name: "onclick".to_string(),
             event_detail: "hint-button".to_string(),
         },
         Event {
+            uid: "3".to_string(),
             event_name: "onclick".to_string(),
             event_detail: "testcase-button".to_string(),
         },
@@ -77,6 +81,7 @@ async fn get_events() -> impl IntoResponse {
 
 #[derive(Deserialize, Serialize, Debug, PartialEq, Eq)]
 struct Event {
+    uid: String,
     event_name: String,
     event_detail: String,
 }
@@ -99,7 +104,7 @@ mod test {
             .method(Method::POST)
             .header(header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
             .body(Body::from(
-                r#"{ "event_name": "button-click", "event_detail": "run-button" }"#,
+                r#"{ "uid": "1", "event_name": "button-click", "event_detail": "run-button" }"#,
             ))
             .unwrap();
 
@@ -113,6 +118,7 @@ mod test {
         assert_eq!(
             event,
             Event {
+                uid: "1".to_string(),
                 event_name: "button-click".to_string(),
                 event_detail: "run-button".to_string(),
             }
@@ -137,14 +143,17 @@ mod test {
 
         let correct_events: [Event; 3] = [
             Event {
+                uid: "1".to_string(),
                 event_name: "onclick".to_string(),
                 event_detail: "run-button".to_string(),
             },
             Event {
+                uid: "2".to_string(),
                 event_name: "onclick".to_string(),
                 event_detail: "hint-button".to_string(),
             },
             Event {
+                uid: "3".to_string(),
                 event_name: "onclick".to_string(),
                 event_detail: "testcase-button".to_string(),
             },
