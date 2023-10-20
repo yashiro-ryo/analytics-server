@@ -3,13 +3,6 @@ use std::{
     collections::HashMap,
     sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard},
 };
-use thiserror::Error;
-
-#[derive(Debug, Error)]
-enum RepositoryError {
-    #[error("NotFound, id id {0}")]
-    NotFound(i32),
-}
 
 pub trait EventRepository: Clone + std::marker::Send + std::marker::Sync + 'static {
     fn create(&self, payload: Event) -> Event;
