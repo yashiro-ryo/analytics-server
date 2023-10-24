@@ -6,16 +6,19 @@ use crate::repositories::{Event, EventRepository};
 pub async fn create_event<T: EventRepository>(
     Json(payload): Json<Event>,
     Extension(repository): Extension<Arc<T>>,
-) -> impl IntoResponse {
-    let event = repository.create(payload);
+) -> Result<impl IntoResponse, StatusCode> {
+    let event = repository
+        .create(payload)
+        .await
+        .or(Err(StatusCode::NOT_FOUND))?;
 
-    (StatusCode::CREATED, Json(event))
+    Ok((StatusCode::CREATED, Json(event)))
 }
 
 pub async fn all_events<T: EventRepository>(
     Extension(repository): Extension<Arc<T>>,
-) -> impl IntoResponse {
-    let events = repository.all();
+) -> Result<impl IntoResponse, StatusCode> {
+    let events = repository.all().await.unwrap();
 
-    (StatusCode::OK, Json(events))
+    Ok((StatusCode::OK, Json(events)))
 }
