@@ -1,7 +1,7 @@
 mod handlers;
 mod repositories;
 
-use crate::repositories::{EventRepository, EventRepositoryForMemory};
+use crate::repositories::{EventRepository, EventRepositoryForDb};
 
 use axum::{
     extract::Extension,
@@ -24,13 +24,13 @@ async fn main() {
 
     let database_url = &env::var("DATABASE_URL").expect("undefined [DATABASE_URL]");
     tracing::debug!("start connect database...");
-    let _pool = PgPool::connect(database_url)
+    let pool = PgPool::connect(database_url)
         .await
         .expect(&format!("fail connect database, url is [{}]", database_url));
-    let repository = EventRepositoryForMemory::new();
+    let repository = EventRepositoryForDb::new(pool.clone());
 
     let app = create_app(repository);
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3030));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3031));
     tracing::debug!("listening on {}", addr);
 
     axum::Server::bind(&addr)
