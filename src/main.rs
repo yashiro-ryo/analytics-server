@@ -10,9 +10,11 @@ use axum::{
 };
 use dotenv::dotenv;
 use handlers::{all_events, create_event};
+use hyper::header::CONTENT_TYPE;
 use sqlx::PgPool;
 use std::net::SocketAddr;
 use std::{env, sync::Arc};
+use tower_http::cors::{Any, CorsLayer, Origin};
 
 #[tokio::main]
 async fn main() {
@@ -30,7 +32,7 @@ async fn main() {
     let repository = EventRepositoryForDb::new(pool.clone());
 
     let app = create_app(repository);
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3031));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3032));
     tracing::debug!("listening on {}", addr);
 
     axum::Server::bind(&addr)
@@ -47,6 +49,12 @@ fn create_app<T: EventRepository>(repository: T) -> Router {
             post(create_event::<T>).get(all_events::<T>),
         )
         .layer(Extension(Arc::new(repository)))
+        .layer(
+            CorsLayer::new()
+                .allow_origin(Origin::exact("http://localhost:5173".parse().unwrap()))
+                .allow_methods(Any)
+                .allow_headers(vec![CONTENT_TYPE]),
+        )
 }
 
 async fn root() -> &'static str {
